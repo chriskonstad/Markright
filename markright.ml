@@ -1,8 +1,13 @@
-(* TODO Config loader *)
-(* TODO Input/output *)
+(* TODO Be able to take in config as a file or a string *)
+(* TODO Add commandline flags *)
+(* TODO Write to output, take input somehow *)
+(* TODO Modularize and add build system/files *)
 
 #require "batteries"
 open Batteries
+
+#require "yojson"
+open Yojson
 
 type segment =
   | Text of string
@@ -49,7 +54,7 @@ let filter_empty_text segments =
 
 
 (* Replace the variables in the AST using mapping *)
-let replace nodes mapping =
+let replace mapping nodes =
   List.map (fun n ->
       match n with
       | Text(x) -> Text(x)
@@ -67,3 +72,36 @@ let flatten nodes =
     ) nodes
   in
   String.concat "" strings
+
+
+(* JSON variable configuration loading *)
+exception Invalid_config_data
+exception Invalid_config_id
+
+
+let resolve json id =
+  let rec resolver ids json =
+      match ids with
+          | [] -> raise Invalid_config_id
+          | h::t -> let value = List.assoc h json in
+            match value with
+              | `Assoc a -> resolver t a
+              | `String s -> s
+              (* TODO Handle floats, ints, etc? *)
+              | _ -> raise Invalid_config_data
+  in
+  resolver (String.nsplit id ".") json
+
+
+let loadMap json =
+  resolve (Yojson.Basic.Util.to_assoc json)
+
+
+let loadMapFile file =
+  let json  = Yojson.Basic.from_file file in
+  loadMap json
+
+
+let markright config text =
+  let mapping = loadMapFile config in
+  parse text |> filter_empty_text |> replace mapping |> flatten
