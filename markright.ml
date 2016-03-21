@@ -4,9 +4,8 @@
 (* TODO Modularize and add build system/files *)
 
 #require "batteries"
-open Batteries
-
 #require "yojson"
+open Batteries
 open Yojson
 
 type segment =
@@ -53,7 +52,7 @@ let filter_empty_text segments =
     ) segments
 
 
-(* Replace the variables in the AST using mapping *)
+(* Replace the variables in the segment list using mapping *)
 let replace mapping segments =
   List.map (fun n ->
       match n with
@@ -63,7 +62,7 @@ let replace mapping segments =
 
 
 exception Not_text of string
-(* Flatten the AST into the resulting string *)
+(* Flatten the segment list into the resulting string *)
 let flatten segments =
   let strings = List.map (fun n ->
       match n with
@@ -74,11 +73,10 @@ let flatten segments =
   String.concat "" strings
 
 
-(* JSON variable configuration loading *)
+(********************* JSON variable configuration loading ********************)
+(* With a given json assoc array and id, return the json's value for id *)
 exception Invalid_config_data
 exception Invalid_config_id
-
-
 let resolve json id =
   let rec resolver ids json =
       match ids with
@@ -93,15 +91,18 @@ let resolve json id =
   resolver (String.nsplit id ".") json
 
 
+(* Load json as the variable mapping function *)
 let loadMap json =
   resolve (Yojson.Basic.Util.to_assoc json)
 
 
+(* Load json from a file *)
 let loadMapFile file =
   let json  = Yojson.Basic.from_file file in
   loadMap json
 
 
+(* Use the given config file to run markright on the text *)
 let markright config text =
   let mapping = loadMapFile config in
   parse text |> filter_empty_text |> replace mapping |> flatten
