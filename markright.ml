@@ -54,22 +54,22 @@ let filter_empty_text segments =
 
 
 (* Replace the variables in the AST using mapping *)
-let replace mapping nodes =
+let replace mapping segments =
   List.map (fun n ->
       match n with
       | Text(x) -> Text(x)
       | Variable(x) -> Text(mapping x)
-    ) nodes
+    ) segments
 
 
 exception Not_text of string
 (* Flatten the AST into the resulting string *)
-let flatten nodes =
+let flatten segments =
   let strings = List.map (fun n ->
       match n with
       | Text(x) -> x
       | Variable(x) -> raise (Not_text x)
-    ) nodes
+    ) segments
   in
   String.concat "" strings
 
