@@ -1,0 +1,13 @@
+\{{
+{
+  "mappings": {
+    "roommate": "kuecks",
+  },
+  "imports": [
+    "test.json"
+  ]
+}
+}}
+
+My girlfriend is {{girlfriend}}.  My roommate is \{{roommate}}.  My parents are
+{{parents.dad}} and {{parents.mom}}.
