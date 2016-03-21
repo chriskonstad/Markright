@@ -2,6 +2,8 @@
 (* TODO Add commandline flags *)
 (* TODO Write to output, take input somehow *)
 (* TODO Modularize and add build system/files *)
+(* TODO Test how trimming affects parsing *)
+(* TODO Change from reading in how file to reading line by line at some point *)
 
 #require "batteries"
 #require "yojson"
@@ -53,12 +55,16 @@ let filter_empty_text segments =
 
 
 (* Replace the variables in the segment list using mapping *)
+exception Missing_mapping
 let replace mapping segments =
-  List.map (fun n ->
-      match n with
-      | Text(x) -> Text(x)
-      | Variable(x) -> Text(mapping x)
-    ) segments
+  try
+    List.map (fun n ->
+        match n with
+        | Text(x) -> Text(x)
+        | Variable(x) -> Text(mapping x)
+      ) segments
+  with
+  | _ -> raise Missing_mapping
 
 
 exception Not_text of string
@@ -102,7 +108,23 @@ let loadMapFile file =
   loadMap json
 
 
-(* Use the given config file to run markright on the text *)
-let markright config text =
-  let mapping = loadMapFile config in
+let markright mapping text =
   parse text |> filter_empty_text |> replace mapping |> flatten
+
+
+(* Use the given config file to run markright on the text *)
+let markright_with_config config text =
+  markright (loadMapFile config) text
+
+
+let load_file (f : string) : string =
+  let file = File.open_in f in
+  IO.read_all file
+
+
+let process_file (config : string) (file : string) : string =
+  let text = load_file file in
+  markright_with_config config text
+
+let () =
+  process_file "test.json" "test2.mr" |> print_endline
