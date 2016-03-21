@@ -1,6 +1,7 @@
 (* TODO Config loader *)
 (* TODO Input/output *)
 
+#require "batteries"
 open Batteries
 
 type segment =
