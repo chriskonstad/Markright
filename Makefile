@@ -1,6 +1,6 @@
 EXEC=markright.native
-SOURCES=markright.ml
+SOURCES=src/markright.ml
 
 
 $(EXEC): $(SOURCES)
-	corebuild -use-ocamlfind -pkgs Batteries -pkgs Yojson markright.native
+	corebuild -I src -use-ocamlfind -pkgs Batteries -pkgs Yojson markright.native
