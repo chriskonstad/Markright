@@ -5,8 +5,9 @@
 (* TODO Test how trimming affects parsing *)
 (* TODO Change from reading in how file to reading line by line at some point *)
 
-#require "batteries"
-#require "yojson"
+(*#require "batteries"*)
+(*#require "yojson"*)
+open Core.Std
 open Batteries
 open Yojson
 
@@ -20,7 +21,7 @@ let var_end_string = "}}"
 (* Parse text into a segment list *)
 let rec parse text =
   try
-    let var_start = String.find text var_start_string in
+    let var_start = Batteries.String.find text var_start_string in
     let var_end = String.find text var_end_string in
     if var_start != 0 && text.[var_start-1] = '\\' then (
       (* Escaped *)
@@ -126,5 +127,16 @@ let process_file (config : string) (file : string) : string =
   let text = load_file file in
   markright_with_config config text
 
+let command =
+  Command.basic
+    ~summary:"Convert a Markright file to Markdown"
+    ~readme:(fun () -> "More detailed information")
+    Command.Spec.(empty
+                  +> anon ("config_file" %: file)
+                  +> anon ("markright_file" %: file)
+                 )
+    (fun config text () -> process_file config text |> print_string)
+
+
 let () =
-  process_file "test.json" "test2.mr" |> print_endline
+  Command.run ~version:"1.0" command
