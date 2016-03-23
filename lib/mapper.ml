@@ -29,22 +29,60 @@ let loadMapFile file =
   loadMap json
 
 
+(* Load a list of json files *)
+let loadMapFiles (files : string list) =
+  List.fold_left (fun lst file ->
+      (loadMapFile file)::lst
+    ) [] files
+
+
 (* Collect all mappings into a list of mappings *)
 exception Invalid_config_mappings
+exception Invalid_config_imports
 let collectMappings segments =
-  List.fold_left (fun map_list segment ->
-      match segment with
-      | Config(x) ->
-        (* TODO Load config files first, then prepend the inlined mappings *)
-        let json = Yojson.Basic.from_string x in
-        let inline = Yojson.Basic.Util.member "mappings" json in (
-          match inline with
-          | `Null -> map_list
-          | `Assoc a -> (resolve  a)::map_list
-          | _ -> raise Invalid_config_mappings
-        )
-      | _ -> map_list
-    ) [] segments
+  let configs = segments |> List.filter (fun seg ->
+      match seg with
+      | Config(_) -> true
+      | _ -> false
+    )
+  in
+  let imports =
+    List.fold_left (fun map_list segment ->
+        match segment with
+        | Config(x) ->
+          let json = Yojson.Basic.from_string x in
+          let files = Yojson.Basic.Util.member "imports" json in (
+            match files with
+            | `Null -> map_list
+            | `List a -> (
+                let file_names = List.map (fun data ->
+                    match data with
+                    | `String f -> f
+                    | _ -> raise Invalid_config_imports
+                  ) a
+                in
+                loadMapFiles file_names
+              )@map_list
+            | _ -> raise Invalid_config_imports
+          )
+        | _ -> map_list
+      ) [] configs
+  in
+  let inline_mappings =
+    List.fold_left (fun map_list segment ->
+        match segment with
+        | Config(x) ->
+          let json = Yojson.Basic.from_string x in
+          let inline = Yojson.Basic.Util.member "mappings" json in (
+            match inline with
+            | `Null -> map_list
+            | `Assoc a -> (resolve  a)::map_list
+            | _ -> raise Invalid_config_mappings
+          )
+        | _ -> map_list
+      ) [] configs
+  in
+  inline_mappings@imports
 
 
 (* Apply mappings to an id *)

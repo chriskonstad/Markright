@@ -1,5 +1,4 @@
 (* TODO Test how trimming affects parsing *)
-(* TODO Add support for importing config *)
 (* TODO Make config file optional *)
 
 open Core.Std
