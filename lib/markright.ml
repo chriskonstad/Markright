@@ -1,7 +1,6 @@
 (* TODO Test how trimming affects parsing *)
 (* TODO Add support for inline config *)
 (* TODO Add support for importing config *)
-(* TODO Add support for multiple configs *)
 
 open Core.Std
 open Batteries
@@ -9,8 +8,10 @@ open Mapper
 open Parser
 
 (* With a given json assoc array and id, return the json's value for id *)
-let markright mapping text =
-  parse text |> filter_empty_text |> replace mapping |> flatten
+let markright mapping (text : string) : string =
+  let segments = parse text |> filter_empty_text in
+  let mappings = (collectMappings segments) in
+  replace (applyMap (mappings@(mapping::[]))) segments |> flatten
 
 
 (* Use the given config file to run markright on the text *)

@@ -1,4 +1,5 @@
 open Batteries
+open Parser
 open Yojson
 
 exception Invalid_config_data
@@ -26,3 +27,39 @@ let loadMap json =
 let loadMapFile file =
   let json  = Yojson.Basic.from_file file in
   loadMap json
+
+
+(* Collect all mappings into a list of mappings *)
+let collectMappings segments =
+  List.fold_left (fun map_list segment ->
+      match segment with
+      | Config(x) -> (Yojson.Basic.from_string x |> loadMap)::map_list
+      | _ -> map_list
+    ) [] segments
+
+
+(* Apply mappings to an id *)
+exception No_mapping of string
+let rec applyMap maps id =
+  match maps with
+  | [] -> raise (No_mapping id)
+  | h::t -> try
+      h id
+    with
+    | _ -> applyMap t id
+
+
+(* Replace the variables in the segment list using mapping *)
+exception Missing_mapping
+let replace mapping segments =
+  try
+    List.map (fun n ->
+        match n with
+        | Text(x) -> Text(x)
+        | Variable(x) -> Text(mapping x)
+        | Config(x) -> Text("")
+      ) segments
+  with
+  | _ -> raise Missing_mapping
+
+
