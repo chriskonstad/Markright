@@ -1,2 +1,7 @@
 _build
-markright.native
+*.native
+*.byte
+*.docdir
+
+setup.data
+setup.log

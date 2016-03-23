@@ -139,4 +139,4 @@ let command =
 
 
 let () =
-  Command.run ~version:"1.0" command
+  Command.run ~version:"0.1" command

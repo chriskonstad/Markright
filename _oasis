@@ -1,0 +1,28 @@
+Name: Markright
+Version: 0.1
+Synopsis: A Markdown preprocessor.
+Authors: Chris Konstad <chriskon149@gmail.com>
+License: MIT
+
+Description: Markright preprocesses Markdown files to add support for variables.
+Homepage: https://github.com/chriskonstad/Markright
+
+OASISFormat: 0.4
+BuildTools: ocamlbuild
+Plugins: META (0.4), DevFiles (0.4)
+
+SourceRepository master
+  Type: git
+  Location: https://github.com/chriskonstad/Markright
+  Branch: master
+  Browser: https://github.com/chriskonstad/Markright
+
+Executable "markright"
+  Path: src
+  MainIs: markright.ml
+  CompiledObject: best
+  BuildDepends:
+    batteries,
+    core,
+    threads,
+    yojson
