@@ -30,10 +30,19 @@ let loadMapFile file =
 
 
 (* Collect all mappings into a list of mappings *)
+exception Invalid_config_mappings
 let collectMappings segments =
   List.fold_left (fun map_list segment ->
       match segment with
-      | Config(x) -> (Yojson.Basic.from_string x |> loadMap)::map_list
+      | Config(x) ->
+        (* TODO Load config files first, then prepend the inlined mappings *)
+        let json = Yojson.Basic.from_string x in
+        let inline = Yojson.Basic.Util.member "mappings" json in (
+          match inline with
+          | `Null -> map_list
+          | `Assoc a -> (resolve  a)::map_list
+          | _ -> raise Invalid_config_mappings
+        )
       | _ -> map_list
     ) [] segments
 

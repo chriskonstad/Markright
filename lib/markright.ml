@@ -1,6 +1,6 @@
 (* TODO Test how trimming affects parsing *)
-(* TODO Add support for inline config *)
 (* TODO Add support for importing config *)
+(* TODO Make config file optional *)
 
 open Core.Std
 open Batteries
