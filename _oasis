@@ -1,3 +1,7 @@
+# +----------------------------------------------------------------------------+
+# | Package parameters                                                         |
+# +----------------------------------------------------------------------------+
+
 Name: Markright
 Version: 0.1
 Synopsis: A Markdown preprocessor.
@@ -11,18 +15,38 @@ OASISFormat: 0.4
 BuildTools: ocamlbuild
 Plugins: META (0.4), DevFiles (0.4)
 
+# +----------------------------------------------------------------------------+
+# | Misc                                                                       |
+# +----------------------------------------------------------------------------+
+
 SourceRepository master
   Type: git
   Location: https://github.com/chriskonstad/Markright
   Branch: master
   Browser: https://github.com/chriskonstad/Markright
 
-Executable "markright"
-  Path: src
-  MainIs: markright.ml
-  CompiledObject: best
+# +----------------------------------------------------------------------------+
+# | Libraries                                                                  |
+# +----------------------------------------------------------------------------+
+
+Library "markright"
+  Path: lib
+  Modules: Markright
   BuildDepends:
     batteries,
     core,
     threads,
     yojson
+
+# +----------------------------------------------------------------------------+
+# | Executable                                                                 |
+# +----------------------------------------------------------------------------+
+
+Executable "markright_exec"
+  Path: src
+  MainIs: mrcli.ml
+  CompiledObject: best
+  BuildDepends:
+    core,
+    markright,
+    threads
