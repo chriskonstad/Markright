@@ -1,8 +1,7 @@
-(* TODO Be able to take in config as a file or a string *)
-(* TODO Add commandline flags *)
-(* TODO Write to output, take input somehow *)
 (* TODO Test how trimming affects parsing *)
-(* TODO Change from reading in how file to reading line by line at some point *)
+(* TODO Add support for inline config *)
+(* TODO Add support for importing config *)
+(* TODO Add support for multiple configs *)
 
 open Core.Std
 open Batteries
