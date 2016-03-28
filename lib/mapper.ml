@@ -39,7 +39,7 @@ let loadMapFiles (files : string list) =
 (* Collect all mappings into a list of mappings *)
 exception Invalid_config_mappings
 exception Invalid_config_imports
-let collectMappings segments =
+let collectMappings segments dir =
   let configs = segments |> List.filter (fun seg ->
       match seg with
       | Config(_) -> true
@@ -61,7 +61,9 @@ let collectMappings segments =
                     | _ -> raise Invalid_config_imports
                   ) a
                 in
-                loadMapFiles file_names
+                List.map (fun f ->
+                    Filename.concat dir f
+                  ) file_names |> loadMapFiles
               )@map_list
             | _ -> raise Invalid_config_imports
           )
