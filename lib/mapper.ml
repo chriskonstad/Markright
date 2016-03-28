@@ -2,6 +2,7 @@ open Batteries
 open Parser
 open Yojson
 
+(* Resolve an ID to a given assoc list *)
 exception Invalid_config_data
 exception Invalid_config_id
 let resolve json id =
@@ -18,27 +19,44 @@ let resolve json id =
   resolver (String.nsplit id ".") json
 
 
-(* Load json as the variable mapping function *)
-let loadMap json =
-  resolve (Yojson.Basic.Util.to_assoc json)
-
-
-(* Load json from a file *)
-let loadMapFile file =
-  let json  = Yojson.Basic.from_file file in
-  loadMap json
-
-
-(* Load a list of json files *)
-let loadMapFiles (files : string list) =
-  List.fold_left (fun lst file ->
-      (loadMapFile file)::lst
-    ) [] files
+(* Load a configuration given as text *)
+exception Invalid_config_mappings
+exception Invalid_config_imports
+let rec loadConfiguration (config : string) (dir : string) : (string -> string) list =
+  let imports =
+    let json = Yojson.Basic.from_string config in
+    let files = Yojson.Basic.Util.member "imports" json in
+    match files with
+    | `Null -> []
+    | `List a -> (
+        let file_names = List.map (fun data ->
+            match data with
+            | `String f -> f
+            | _ -> raise Invalid_config_imports
+          ) a
+        in
+        List.fold_left (fun ret f ->
+            let f_name = Filename.concat dir f in
+            let file = File.open_in f_name in
+            let config_text = IO.read_all file in
+            (loadConfiguration config_text (Filename.dirname f_name))@ret
+          ) [] file_names
+      )
+    | _ -> raise Invalid_config_imports
+  in
+  let inline_mappings =
+    let json = Yojson.Basic.from_string config in
+    let inline = Yojson.Basic.Util.member "mappings" json in
+    match inline with
+    | `Null -> []
+    | `Assoc a -> (resolve  a)::[]
+    | _ -> raise Invalid_config_mappings
+  in
+  inline_mappings@imports
 
 
 (* Collect all mappings into a list of mappings *)
-exception Invalid_config_mappings
-exception Invalid_config_imports
+exception Not_config
 let collectMappings segments dir =
   let configs = segments |> List.filter (fun seg ->
       match seg with
@@ -46,45 +64,11 @@ let collectMappings segments dir =
       | _ -> false
     )
   in
-  let imports =
-    List.fold_left (fun map_list segment ->
-        match segment with
-        | Config(x) ->
-          let json = Yojson.Basic.from_string x in
-          let files = Yojson.Basic.Util.member "imports" json in (
-            match files with
-            | `Null -> map_list
-            | `List a -> (
-                let file_names = List.map (fun data ->
-                    match data with
-                    | `String f -> f
-                    | _ -> raise Invalid_config_imports
-                  ) a
-                in
-                List.map (fun f ->
-                    Filename.concat dir f
-                  ) file_names |> loadMapFiles
-              )@map_list
-            | _ -> raise Invalid_config_imports
-          )
-        | _ -> map_list
-      ) [] configs
-  in
-  let inline_mappings =
-    List.fold_left (fun map_list segment ->
-        match segment with
-        | Config(x) ->
-          let json = Yojson.Basic.from_string x in
-          let inline = Yojson.Basic.Util.member "mappings" json in (
-            match inline with
-            | `Null -> map_list
-            | `Assoc a -> (resolve  a)::map_list
-            | _ -> raise Invalid_config_mappings
-          )
-        | _ -> map_list
-      ) [] configs
-  in
-  inline_mappings@imports
+  List.fold_left (fun maplist c ->
+      match c with
+      | Config(x) -> (loadConfiguration x dir)@maplist
+      | _ -> raise Not_config
+    ) [] configs
 
 
 (* Apply mappings to an id *)
@@ -111,5 +95,3 @@ let replace mapping segments =
         with
         | _ -> raise (Missing_mapping(x))
     ) segments
-
-

@@ -1,5 +1,7 @@
 {
-  "parents": {
-    "dad": "Rolf"
+  "mappings": {
+    "parents": {
+      "dad": "Rolf"
+    }
   }
 }

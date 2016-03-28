@@ -1,7 +1,7 @@
 {{
 {
   "imports": [
-    "test21.json", "test22.json", "test23.json"
+    "test21.json", "test22.json"
   ],
   "mappings": {
     "roommate": "kuecks"

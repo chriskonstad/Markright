@@ -1,5 +1,4 @@
 (* TODO Test how trimming affects parsing *)
-(* TODO Change config file format to match inline format *)
 
 open Core.Std
 open Batteries
