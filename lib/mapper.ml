@@ -97,16 +97,17 @@ let rec applyMap maps id =
 
 
 (* Replace the variables in the segment list using mapping *)
-exception Missing_mapping
+exception Missing_mapping of string
 let replace mapping segments =
-  try
-    List.map (fun n ->
-        match n with
-        | Text(x) -> Text(x)
-        | Variable(x) -> Text(mapping x)
-        | Config(x) -> Text("")
-      ) segments
-  with
-  | _ -> raise Missing_mapping
+  List.map (fun n ->
+      match n with
+      | Text(x) -> Text(x)
+      | Config(x) -> Text("")
+      | Variable(x) ->
+        try
+          Text(mapping x)
+        with
+        | _ -> raise (Missing_mapping(x))
+    ) segments
 
 

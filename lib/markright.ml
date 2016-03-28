@@ -1,5 +1,5 @@
 (* TODO Test how trimming affects parsing *)
-(* TODO Make config file optional *)
+(* TODO Change config file format to match inline format *)
 
 open Core.Std
 open Batteries
@@ -7,15 +7,10 @@ open Mapper
 open Parser
 
 (* With a given json assoc array and id, return the json's value for id *)
-let markright mapping (text : string) : string =
+let markright (text : string) : string =
   let segments = parse text |> filter_empty_text in
   let mappings = (collectMappings segments) in
-  replace (applyMap (mappings@(mapping::[]))) segments |> flatten
-
-
-(* Use the given config file to run markright on the text *)
-let markright_with_config config text =
-  markright (loadMapFile config) text
+  replace (applyMap mappings) segments |> flatten
 
 
 let load_file (f : string) : string =
@@ -23,6 +18,6 @@ let load_file (f : string) : string =
   IO.read_all file
 
 
-let process_file (config : string) (file : string) : string =
+let process_file (file : string) : string =
   let text = load_file file in
-  markright_with_config config text
+  markright text

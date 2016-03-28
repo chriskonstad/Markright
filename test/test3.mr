@@ -1,6 +1,11 @@
 {{
 {
-  "roommate": "kuecks"
+  "imports": [
+    "test/test21.json", "test/test22.json", "test/test23.json"
+  ],
+  "mappings": {
+    "roommate": "kuecks"
+  }
 }
 }}
 
