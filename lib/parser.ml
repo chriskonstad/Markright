@@ -38,7 +38,6 @@ let rec parse text =
       let contents = String.trim (String.sub name
                      (String.length var_start_string)
                      name_length) in
-      print_endline contents;
       if '{' = contents.[0] then
         Config(contents)::next
       else

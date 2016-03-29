@@ -61,3 +61,16 @@ Executable "markright_exec"
     core,
     markright,
     threads
+
+# +----------------------------------------------------------------------------+
+# | Tests                                                                      |
+# +----------------------------------------------------------------------------+
+Executable test
+  Install: false
+  Path: .
+  MainIs: test.ml
+  BuildDepends: oUnit, markright
+
+Test "main"
+  Type: Custom (0.0.1)
+  Command: $test

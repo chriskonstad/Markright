@@ -1,9 +1,7 @@
 {{
 {
-  "imports": [
-    "test2.json"
-  ],
   "mappings": {
+    "fruit": "apple",
     "desserts" : {
       "ice_cream": "vanilla"
     }

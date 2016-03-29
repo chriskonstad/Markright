@@ -1,13 +1,14 @@
 {{
 {
   "imports": [
-    "test21.json", "test22.json"
+    "test3.json"
   ],
   "mappings": {
-    "roommate": "kuecks"
+    "fruit": "apple",
+    "desserts" : {
+      "ice_cream": "vanilla"
+    }
   }
 }
 }}
-
-My girlfriend is {{girlfriend}}.  My roommate is {{roommate}}.  My parents are
-{{parents.dad}} and {{parents.mom}}.
+I like {{fruit}} pie with {{desserts.ice_cream}} ice cream.
