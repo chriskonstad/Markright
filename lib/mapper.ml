@@ -2,27 +2,45 @@ open Batteries
 open Parser
 open Yojson
 
-(* Resolve an ID to a given assoc list *)
-exception Invalid_config_data
-exception Invalid_config_id
-let resolve json id =
-  let rec resolver ids json =
-      match ids with
-          | [] -> raise Invalid_config_id
-          | h::t -> let value = List.assoc h json in
-            match value with
-              | `Assoc a -> resolver t a
-              | `String s -> s
-              (* TODO Handle floats, ints, etc? *)
-              | _ -> raise Invalid_config_data
+
+(* Flatten an assoc list of JSON to an assoc list of strings *)
+exception Bad_stringify
+let rec stringify (config : (string * Yojson.Basic.json) list)
+    (parents : string list) : (string * string) list =
+  List.fold_left (fun c_list pair ->
+      match pair with
+      | k, value ->
+        (
+          match value with
+          | `String v ->
+            ((String.concat "." (parents@[k])), v)::c_list
+          | `Assoc v ->
+            (stringify v (parents@[k]))@c_list
+          | _ -> raise Bad_stringify
+        )
+    ) [] config
+
+
+(** Merge multiple configurations into one, while
+    detecting if one config overrides another *)
+exception Multiple_def of string
+let rec merge configs =
+  let merger config base =
+    List.iter (fun (k,_) ->
+        if List.mem_assoc k base then
+          raise (Multiple_def k)
+      ) config;
+    config@base
   in
-  resolver (String.nsplit id ".") json
+  List.fold_left (fun ret cur ->
+      merger cur ret
+    ) [] configs
 
 
 (* Load a configuration given as text *)
 exception Invalid_config_mappings
 exception Invalid_config_imports
-let rec loadConfiguration (config : string) (dir : string) : (string -> string) list =
+let rec loadConfiguration (config : string) (dir : string) =
   let imports =
     let json = Yojson.Basic.from_string config in
     let files = Yojson.Basic.Util.member "imports" json in
@@ -49,7 +67,7 @@ let rec loadConfiguration (config : string) (dir : string) : (string -> string) 
     let inline = Yojson.Basic.Util.member "mappings" json in
     match inline with
     | `Null -> []
-    | `Assoc a -> (resolve  a)::[]
+    | `Assoc a -> a::[]
     | _ -> raise Invalid_config_mappings
   in
   inline_mappings@imports
@@ -64,22 +82,18 @@ let collectMappings segments dir =
       | _ -> false
     )
   in
-  List.fold_left (fun maplist c ->
+  let collected = List.fold_left (fun maplist c ->
       match c with
       | Config(x) -> (loadConfiguration x dir)@maplist
       | _ -> raise Not_config
-    ) [] configs
+    ) [] configs in
+  List.map (fun config ->
+      stringify config []
+    ) collected |> merge
 
 
-(* Apply mappings to an id *)
-exception No_mapping of string
-let rec applyMap maps id =
-  match maps with
-  | [] -> raise (No_mapping id)
-  | h::t -> try
-      h id
-    with
-    | _ -> applyMap t id
+let applyMap map id =
+  List.assoc id map
 
 
 (* Replace the variables in the segment list using mapping *)

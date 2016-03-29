@@ -8,8 +8,8 @@ open Parser
 (* With a given json assoc array and id, return the json's value for id *)
 let markright (text : string) (dir : string) : string =
   let segments = parse text |> filter_empty_text in
-  let mappings = (collectMappings segments dir) in
-  replace (applyMap mappings) segments |> flatten
+  let mapping = (collectMappings segments dir) in
+  replace (applyMap mapping) segments |> flatten
 
 
 let load_file (f : string) : string =
