@@ -25,13 +25,24 @@ SourceRepository master
   Branch: master
   Browser: https://github.com/chriskonstad/Markright
 
+AlphaFeatures: ocamlbuild_more_args
+Document "markright_api"
+  Type: ocamlbuild (0.4)
+  BuildTools: ocamldoc
+
+  Title: API reference for Markright
+  XOCamlbuildPath: .
+  XOCamlbuildExtraArgs:
+    "-docflags '-colorize-code -short-functors -charset utf-8'"
+  XOCamlbuildLibraries: markright
+
 # +----------------------------------------------------------------------------+
 # | Libraries                                                                  |
 # +----------------------------------------------------------------------------+
 
 Library "markright"
   Path: lib
-  Modules: Markright
+  Modules: Markright, Parser, Mapper
   BuildDepends:
     batteries,
     core,

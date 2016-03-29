@@ -1,10 +1,12 @@
+(** Maps variables to actual values *)
 open Batteries
 open Parser
 open Yojson
 
 
-(* Flatten an assoc list of JSON to an assoc list of strings *)
+(** stringify reached a data type that it cannot handle *)
 exception Bad_stringify
+(** Flatten an assoc list of JSON to an assoc list of strings *)
 let rec stringify (config : (string * Yojson.Basic.json) list)
     (parents : string list) : (string * string) list =
   List.fold_left (fun c_list pair ->
@@ -21,9 +23,10 @@ let rec stringify (config : (string * Yojson.Basic.json) list)
     ) [] config
 
 
+(** A variable has multiple definitions *)
+exception Multiple_def of string
 (** Merge multiple configurations into one, while
     detecting if one config overrides another *)
-exception Multiple_def of string
 let rec merge ignore_mult_def configs =
   let merger config base =
     List.iter (fun (k,_) ->
@@ -39,9 +42,11 @@ let rec merge ignore_mult_def configs =
     ) [] configs
 
 
-(* Load a configuration given as text *)
+(** There is a bad mapping in the config *)
 exception Invalid_config_mappings
+(** There is a bad import in the config *)
 exception Invalid_config_imports
+(** Recursively load the given configuration *)
 let rec loadConfiguration (config : string) (dir : string) =
   let imports =
     let json = Yojson.Basic.from_string config in
@@ -75,7 +80,7 @@ let rec loadConfiguration (config : string) (dir : string) =
   inline_mappings@imports
 
 
-(* Collect all mappings into a list of mappings *)
+(** Collect all mappings into a single mapping *)
 exception Not_config
 let collectMappings ?(ignore_mult_def=false) segments dir =
   let configs = segments |> List.filter (fun seg ->
@@ -94,11 +99,12 @@ let collectMappings ?(ignore_mult_def=false) segments dir =
     ) collected |> merge ignore_mult_def
 
 
+(** Apply the mapping map to the given id *)
 let applyMap map id =
   List.assoc id map
 
 
-(* Replace the variables in the segment list using mapping *)
+(** Replace the variables in the segment list using mapping *)
 exception Missing_mapping of string
 let replace mapping segments =
   List.map (fun n ->
