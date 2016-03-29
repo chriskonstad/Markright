@@ -24,11 +24,13 @@ let rec stringify (config : (string * Yojson.Basic.json) list)
 (** Merge multiple configurations into one, while
     detecting if one config overrides another *)
 exception Multiple_def of string
-let rec merge configs =
+let rec merge ignore_mult_def configs =
   let merger config base =
     List.iter (fun (k,_) ->
-        if List.mem_assoc k base then
-          raise (Multiple_def k)
+        if List.mem_assoc k base then (
+          if not ignore_mult_def then
+            raise (Multiple_def k)
+        )
       ) config;
     config@base
   in
@@ -75,7 +77,7 @@ let rec loadConfiguration (config : string) (dir : string) =
 
 (* Collect all mappings into a list of mappings *)
 exception Not_config
-let collectMappings segments dir =
+let collectMappings ?(ignore_mult_def=false) segments dir =
   let configs = segments |> List.filter (fun seg ->
       match seg with
       | Config(_) -> true
@@ -89,7 +91,7 @@ let collectMappings segments dir =
     ) [] configs in
   List.map (fun config ->
       stringify config []
-    ) collected |> merge
+    ) collected |> merge ignore_mult_def
 
 
 let applyMap map id =
