@@ -4,6 +4,9 @@ open Parser
 open Yojson
 
 
+(** Says how to handle the multiple definition warning *)
+type mult_def_handle = Ignore | Warn | Throw
+
 (** Keep the json and the file it's pulled from together *)
 type named_json =
   { json : (string * Yojson.Basic.json) list list;
@@ -40,15 +43,18 @@ let rec stringify (config : (string * Yojson.Basic.json) list)
 exception Multiple_def of string
 (** Merge multiple configurations into one, while
     detecting if one config overrides another *)
-let rec merge ignore_mult_def configs =
+let rec merge mult_def_handle configs =
   let merger config base =
     let make_mult_def_msg first second =
       first.mapping ^ " (" ^ first.file ^ ") defined again in " ^ second.file
     in
     List.iter (fun (k,v) ->
         if List.mem_assoc k base then (
-          if not ignore_mult_def then
-            raise (Multiple_def (make_mult_def_msg (List.assoc k base) v))
+          let msg = (make_mult_def_msg (List.assoc k base) v) in
+          match mult_def_handle with
+          | Ignore -> ()
+          | Warn -> prerr_endline msg
+          | Throw -> raise (Multiple_def msg)
         )
       ) config;
     config@base
@@ -100,7 +106,7 @@ let rec loadConfiguration (config : string) (file : string) : named_json list =
 
 (** Collect all mappings into a single mapping *)
 exception Not_config
-let collectMappings ?(ignore_mult_def=false) segments file =
+let collectMappings ?(mult_def_handle=Throw) segments file =
   let configs = segments |> List.filter (fun seg ->
       match seg with
       | Config(_) -> true
@@ -124,9 +130,9 @@ let collectMappings ?(ignore_mult_def=false) segments file =
                    file = file;
                 }) ) s
           ) strings
-        |> merge ignore_mult_def
+        |> merge mult_def_handle
     ) collected in
-  merge ignore_mult_def condensed |> List.map (fun (k,v) ->
+  merge mult_def_handle condensed |> List.map (fun (k,v) ->
       (k,v.mapping)
     )
 
