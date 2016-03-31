@@ -10,7 +10,7 @@ let test_basic test_ctxt = assert_equal
        "./test")
 
 let test_basic_escaped test_ctxt = assert_equal
-    "I like \{{lang}}!"
+    "I like {{lang}}!"
     (markright
        false
        "{{ {\"mappings\": { \"lang\": \"OCaml\"} } }}I like \{{lang}}!"

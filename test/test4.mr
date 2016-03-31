@@ -1,0 +1,9 @@
+{{
+{
+  "mappings":
+  {
+    "lang": "OCaml"
+  }
+}
+}}
+I like \{{lang}}! But {{lang}} isn't bad either.  Almost as good as \{{lang}}.

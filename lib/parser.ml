@@ -20,10 +20,17 @@ let rec parse text =
     let var_start = Batteries.String.find text var_start_string in
     let var_end = String.find text var_end_string in
     if var_start != 0 && text.[var_start-1] = '\\' then (
-      (* Escaped *)
-      let next_ind = String.find_from text (var_start + 1) var_start_string in
-      Text(String.sub text 0 next_ind) ::
-      parse (String.sub text next_ind ((String.length text) - next_ind))
+      (* Escaped, also consumes escape char *)
+      try
+        let next_ind = String.find_from text (var_start + 1) var_start_string in
+        Text(String.sub text 0 (var_start-1)) ::
+        Text(String.sub text var_start (next_ind-var_start)) ::
+        parse (String.sub text next_ind ((String.length text) - next_ind))
+      with
+      | Not_found ->
+        Text(String.sub text 0 (var_start-1)) ::
+        Text(String.sub text (var_start) ((String.length text) - var_start)) ::
+        []
     ) else
       let var_length = var_end - var_start + (String.length var_end_string) in
       Text(String.sub text 0 var_start) ::
@@ -44,7 +51,7 @@ let rec parse text =
         Variable(contents)::next
   with
   (* No variables found *)
-  | _ -> Text(text)::[]
+  | x -> Text(text)::[]
 
 
 (** Remove empty text segments *)
