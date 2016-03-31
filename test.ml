@@ -27,7 +27,7 @@ let test_import_nested text_ctxt = assert_equal
 
 (* Test error on multiple defs *)
 let test_mult_error text_ctxt = assert_raises
-    (Mapper.Multiple_def("fruit"))
+    (Mapper.Multiple_def("apple (./test/test3.mr) defined again in ./test/test3.json"))
     (fun () -> (markright false (load_file "test/test3.mr") "./test/test3.mr"))
 
 (* Test ignoring error on multiple defs *)

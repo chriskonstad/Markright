@@ -4,7 +4,20 @@ open Parser
 open Yojson
 
 
-(** stringify reached a data type that it cannot handle *)
+(** Keep the json and the file it's pulled from together *)
+type named_json =
+  { json : (string * Yojson.Basic.json) list list;
+    file : string;
+  }
+
+(** Keep a mapping its source file together *)
+type named_mapping =
+  { mapping : string;
+    file : string;
+  }
+
+
+(** Mapper.stringify reached a data type that it cannot handle *)
 exception Bad_stringify
 (** Flatten an assoc list of JSON to an assoc list of strings *)
 let rec stringify (config : (string * Yojson.Basic.json) list)
@@ -29,10 +42,13 @@ exception Multiple_def of string
     detecting if one config overrides another *)
 let rec merge ignore_mult_def configs =
   let merger config base =
-    List.iter (fun (k,_) ->
+    let make_mult_def_msg first second =
+      first.mapping ^ " (" ^ first.file ^ ") defined again in " ^ second.file
+    in
+    List.iter (fun (k,v) ->
         if List.mem_assoc k base then (
           if not ignore_mult_def then
-            raise (Multiple_def k)
+            raise (Multiple_def (make_mult_def_msg (List.assoc k base) v))
         )
       ) config;
     config@base
@@ -47,7 +63,7 @@ exception Invalid_config_mappings
 (** There is a bad import in the config *)
 exception Invalid_config_imports
 (** Recursively load the given configuration *)
-let rec loadConfiguration (config : string) (file : string) =
+let rec loadConfiguration (config : string) (file : string) : named_json list =
   let imports =
     let json = Yojson.Basic.from_string config in
     let files = Yojson.Basic.Util.member "imports" json in
@@ -77,7 +93,9 @@ let rec loadConfiguration (config : string) (file : string) =
     | `Assoc a -> a::[]
     | _ -> raise Invalid_config_mappings
   in
-  inline_mappings@imports
+  { json = inline_mappings;
+    file = file;
+  }::[]@imports
 
 
 (** Collect all mappings into a single mapping *)
@@ -94,9 +112,23 @@ let collectMappings ?(ignore_mult_def=false) segments file =
       | Config(x) -> (loadConfiguration x file)@maplist
       | _ -> raise Not_config
     ) [] configs in
-  List.map (fun config ->
-      stringify config []
-    ) collected |> merge ignore_mult_def
+  let condensed = List.map (fun nj ->
+        let configs = nj.json in
+        let file = nj.file in
+        let strings = List.map (fun config ->
+            stringify config []
+          ) configs in
+        List.map (fun s ->
+          List.map (fun (k,v) ->
+              (k,{ mapping = v;
+                   file = file;
+                }) ) s
+          ) strings
+        |> merge ignore_mult_def
+    ) collected in
+  merge ignore_mult_def condensed |> List.map (fun (k,v) ->
+      (k,v.mapping)
+    )
 
 
 (** Apply the mapping map to the given id *)
