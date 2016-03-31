@@ -7,9 +7,9 @@ open Mapper
 open Parser
 
 (** Run Markright on the given text with the given properties *)
-let markright ignore_mult_def (text : string) (dir : string) : string =
+let markright ignore_mult_def (text : string) (file : string) : string =
   let segments = parse text |> filter_empty_text in
-  let mapping = (collectMappings segments dir ~ignore_mult_def:ignore_mult_def) in
+  let mapping = (collectMappings segments file ~ignore_mult_def:ignore_mult_def) in
   replace (applyMap mapping) segments |> flatten
 
 
@@ -22,4 +22,4 @@ let load_file (f : string) : string =
 (** Process the given file as a Markright file *)
 let process_file ignore_mult_def (file : string) : string =
   let text = load_file file in
-  markright ignore_mult_def text (Filename.dirname file)
+  markright ignore_mult_def text file

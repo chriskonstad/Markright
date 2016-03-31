@@ -47,7 +47,7 @@ exception Invalid_config_mappings
 (** There is a bad import in the config *)
 exception Invalid_config_imports
 (** Recursively load the given configuration *)
-let rec loadConfiguration (config : string) (dir : string) =
+let rec loadConfiguration (config : string) (file : string) =
   let imports =
     let json = Yojson.Basic.from_string config in
     let files = Yojson.Basic.Util.member "imports" json in
@@ -61,10 +61,10 @@ let rec loadConfiguration (config : string) (dir : string) =
           ) a
         in
         List.fold_left (fun ret f ->
-            let f_name = Filename.concat dir f in
+            let f_name = Filename.concat (Filename.dirname file) f in
             let file = File.open_in f_name in
             let config_text = IO.read_all file in
-            (loadConfiguration config_text (Filename.dirname f_name))@ret
+            (loadConfiguration config_text (f_name))@ret
           ) [] file_names
       )
     | _ -> raise Invalid_config_imports
@@ -82,7 +82,7 @@ let rec loadConfiguration (config : string) (dir : string) =
 
 (** Collect all mappings into a single mapping *)
 exception Not_config
-let collectMappings ?(ignore_mult_def=false) segments dir =
+let collectMappings ?(ignore_mult_def=false) segments file =
   let configs = segments |> List.filter (fun seg ->
       match seg with
       | Config(_) -> true
@@ -91,7 +91,7 @@ let collectMappings ?(ignore_mult_def=false) segments dir =
   in
   let collected = List.fold_left (fun maplist c ->
       match c with
-      | Config(x) -> (loadConfiguration x dir)@maplist
+      | Config(x) -> (loadConfiguration x file)@maplist
       | _ -> raise Not_config
     ) [] configs in
   List.map (fun config ->
