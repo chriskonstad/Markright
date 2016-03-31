@@ -33,11 +33,19 @@ let rec parse text =
         []
     ) else
       let var_length = var_end - var_start + (String.length var_end_string) in
+      let consume_newline =
+        try
+          if text.[var_end + (String.length var_end_string)] = '\n' then 1 else 0
+        with
+        (* if character past end of string *)
+        | _ -> 0
+      in
       Text(String.sub text 0 var_start) ::
+      let next_start = var_start + var_length + consume_newline in
       let next = parse (String.sub
                           text
-                          (var_start + var_length)
-                          ((String.length text) - (var_start + var_length))) in
+                          next_start
+                          ((String.length text) - next_start)) in
       let name = String.sub text var_start var_length in
       let name_length = (String.length name) -
                         (String.length var_start_string) -
