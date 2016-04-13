@@ -20,4 +20,4 @@ let command =
        process_file mult_def_handle abs_filename |> print_string)
 
 let () =
-  Command.run ~version:"0.1" command
+  Command.run ~version:"1.0" command

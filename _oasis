@@ -3,7 +3,7 @@
 # +----------------------------------------------------------------------------+
 
 Name: Markright
-Version: 0.1
+Version: 1.0
 Synopsis: A Markdown preprocessor.
 Authors: Chris Konstad <chriskon149@gmail.com>
 License: MIT
